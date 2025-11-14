@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Online Quiz System</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #3108c7;
+    color:white (70, 32, 119) (250, 249, 249);
+    margin: 0;
+    padding: 20px;
+  }
+  .container {
+    max-width: 700px;
+    margin: auto;
+    background: #8707dd;
+    padding: 20px;
+    border-radius: 10px;
+  }
+  h1 {
+    text-align: center;
+  }
+  select, button {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 10px;
+    border-radius: 6px;
+  }
+  .question-box {
+    margin-top: 20px;
+    padding: 15px;
+    background: #27314a;
+    border-radius: 8px;
+  }
+  .option {
+    background: #35425e;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .option:hover {
+    background: #425075;
+  }
+  #timer {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: right;
+  }
+  #score {
+    font-size: 18px;
+    margin-top: 10px;
+    text-align: right;
+  }
+  #result-box {
+    text-align: center;
+    padding: 20px;
+  }
+</style>
+
+</head>
+<body>
+
+<div class="container">
+  <h1>Online Quiz System</h1>
+
+  <label>Select Topic:</label>
+  <select id="topic">
+    <option value="math">Math</option>
+    <option value="science">Science</option>
+    <option value="gk">General Knowledge</option>
+  </select>
+
+  <label>Quiz Duration (seconds):</label>
+  <input id="duration" type="number" value="60">
+
+  <button onclick="startQuiz()">Start Quiz</button>
+
+  <div id="timer"></div>
+  <div id="score"></div>
+
+  <div id="quiz-area"></div>
+
+  <div id="result-box"></div>
+</div>
+
+<script>
+// ---------------- QUESTION BANK ---------------- //
+
+const questionsData = {
+  math: [
+    { q: "7 × 8 = ?", options: ["54", "56", "48", "58"], answer: 1 },
+    { q: "12 + (6 ÷ 2) × 3 = ?", options: ["30", "27", "21", "15"], answer: 0 },
+    { q: "Square root of 144?", options: ["10", "11", "12", "14"], answer: 2 },
+    { q: "x + 3 = 7, x = ?", options: ["4", "5", "6", "3"], answer: 0 }
+  ],
+
+  science: [
+    { q: "Red planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answer: 1 },
+    { q: "Water boils at?", options: ["1 atm", "2 atm", "3 atm", "0.5 atm"], answer: 0 },
+    { q: "Symbol of Gold?", options: ["Ag", "Au", "Pt", "Gd"], answer: 1 },
+    { q: "Gas absorbed by plants?", options: ["O2", "CO2", "N2", "H2"], answer: 1 }
+  ],
+
+  gk: [
+    { q: "Capital of France?", options: ["Rome", "Paris", "Berlin", "Madrid"], answer: 1 },
+    { q: "Largest ocean?", options: ["Atlantic", "Pacific", "Indian", "Arctic"], answer: 1 },
+    { q: "1st man on moon?", options: ["1969", "1971", "1959", "1967"], answer: 0 },
+    { q: "Author of 'Romeo & Juliet'?", options: ["Dickens", "Twain", "Shakespeare", "Austen"], answer: 2 }
+  ]
+};
+
+// ---------------- VARIABLES ---------------- //
+
+let selectedTopic = "";
+let quizQuestions = [];
+let index = 0;
+let score = 0;
+let timer;
+let timeLeft;
+
+// ---------------- START QUIZ ---------------- //
+
+function startQuiz() {
+  selectedTopic = document.getElementById("topic").value;
+  timeLeft = parseInt(document.getElementById("duration").value);
+
+  quizQuestions = [...questionsData[selectedTopic]];
+  index = 0;
+  score = 0;
+
+  document.getElementById("result-box").innerHTML = "";
+  startTimer();
+  loadQuestion();
+}
+
+// ---------------- TIMER ---------------- //
+
+function startTimer() {
+  timer = setInterval(() => {
+    document.getElementById("timer").innerHTML = "⏳ Time: " + timeLeft + "s";
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      finishQuiz();
+    }
+    timeLeft--;
+  }, 1000);
+}
+
+// ---------------- LOAD QUESTION ---------------- //
+
+function loadQuestion() {
+  if (index >= quizQuestions.length) {
+    finishQuiz();
+    return;
+  }
+
+  let qObj = quizQuestions[index];
+
+  let quizHTML = `
+    <div class="question-box">
+      <h2>(${index + 1}) ${qObj.q}</h2>
+      ${qObj.options
+        .map(
+          (opt, i) =>
+            `<div class='option' onclick='selectAnswer(${i})'>${opt}</div>`
+        )
+        .join("")}
+    </div>
+  `;
+
+  document.getElementById("quiz-area").innerHTML = quizHTML;
+  document.getElementById("score").innerHTML = `Score: ${score}`;
+}
+
+// ---------------- ANSWER SELECTION ---------------- //
+
+function selectAnswer(choice) {
+  let correct = quizQuestions[index].answer;
+
+  if (choice === correct) score++;
+
+  index++;
+  loadQuestion();
+}
+
+// ---------------- FINISH QUIZ ---------------- //
+
+function finishQuiz() {
+  clearInterval(timer);
+
+  document.getElementById("quiz-area").innerHTML = "";
+  document.getElementById("timer").innerHTML = "";
+
+  document.getElementById("result-box").innerHTML = `
+    <h2>Quiz Finished!</h2>
+    <h3>Your Score: ${score} / ${quizQuestions.length}</h3>
+    <button onclick="startQuiz()">Restart Quiz</button>
+  `;
+}
+</script>
+
+</body>
+</html>

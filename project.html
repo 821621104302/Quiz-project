@@ -1,209 +1,381 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Online Quiz System</title>
-
+<title>PYTHON QUIZ</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #3108c7;
-    color:white (70, 32, 119) (250, 249, 249);
-    margin: 0;
-    padding: 20px;
-  }
-  .container {
-    max-width: 700px;
-    margin: auto;
-    background: #8707dd;
-    padding: 20px;
-    border-radius: 10px;
-  }
-  h1 {
+body {
+    background: #101820;
+    color: white;
+    font-family: Arial;
     text-align: center;
-  }
-  select, button {
-    width: 100%;
+}
+.container {
+    width: 90%;
+    max-width: 450px;
+    margin: auto;
+    margin-top: 40px;
+    padding: 20px;
+    border-radius: 12px;
+    background: #1d2835;
+    box-shadow: 0px 0px 10px #000;
+}
+input, button {
+    width: 90%;
     padding: 10px;
-    font-size: 16px;
-    margin-top: 10px;
-    border-radius: 6px;
-  }
-  .question-box {
-    margin-top: 20px;
-    padding: 15px;
-    background: #27314a;
+    margin-top: 12px;
     border-radius: 8px;
-  }
-  .option {
-    background: #35425e;
-    padding: 10px;
-    margin: 8px 0;
+    border: none;
+    font-size: 16px;
+}
+button {
+    background: #00aaff;
+    color: white;
+    cursor: pointer;
+}
+.option {
+    padding: 14px;
+    background: #233044;
+    margin-top: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.option:hover {
+    background: #2e415a;
+}
+.correct {
+    background: #0c8a1f !important;
+    color: white !important;
+}
+.wrong {
+    background: #b30000 !important;
+    color: white !important;
+}
+#timer {
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+/* table for admin */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+th, td {
+    padding: 8px;
+    border-bottom: 1px solid #555;
+}
+th {
+    background: #233044;
+}
+.delete-btn {
+    background: red;
+    padding: 5px 10px;
     border-radius: 6px;
     cursor: pointer;
-  }
-  .option:hover {
-    background: #425075;
-  }
-  #timer {
-    font-size: 20px;
-    font-weight: bold;
-    text-align: right;
-  }
-  #score {
-    font-size: 18px;
-    margin-top: 10px;
-    text-align: right;
-  }
-  #result-box {
-    text-align: center;
-    padding: 20px;
-  }
+    color: white;
+    font-size: 13px;
+}
+.search-box {
+    width: 90%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+}
+.sort-btn, .clear-btn {
+    background: orange;
+    color: black;
+    width: 45%;
+    padding: 10px;
+    margin: 8px 4px;
+}
 </style>
-
 </head>
 <body>
 
-<div class="container">
-  <h1>Online Quiz System</h1>
+<!-- LOGIN PAGE -->
+<div class="container" id="loginBox">
+    <h1>PYTHON QUIZ</h1>
+    <h3>Login to start</h3>
 
-  <label>Select Topic:</label>
-  <select id="topic">
-    <option value="math">Math</option>
-    <option value="science">Science</option>
-    <option value="gk">General Knowledge</option>
-  </select>
-
-  <label>Quiz Duration (seconds):</label>
-  <input id="duration" type="number" value="60">
-
-  <button onclick="startQuiz()">Start Quiz</button>
-
-  <div id="timer"></div>
-  <div id="score"></div>
-
-  <div id="quiz-area"></div>
-
-  <div id="result-box"></div>
+    <input type="text" id="username" placeholder="Enter your name" required>
+    <input type="email" id="email" placeholder="Enter your email" required>
+    <button onclick="startQuiz()">Start Quiz</button>
 </div>
 
+<!-- QUIZ PAGE -->
+<div class="container" id="quizBox" style="display:none;">
+    <h2>Python Quiz</h2>
+    <p id="timer">Time Left: 05:00</p>
+    <div id="question-box"></div>
+    <button onclick="nextQuestion()">Next</button>
+</div>
+
+<!-- RESULT PAGE -->
+<div class="container" id="resultBox" style="display:none;">
+    <h1>Quiz Completed!</h1>
+    <h2 id="user"></h2>
+    <h2 id="score"></h2>
+    <button onclick="location.reload()">Restart</button>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div class="container" id="adminLogin" style="display:none;">
+    <h1>Admin Login</h1>
+    <input type="password" id="adminPass" placeholder="Enter Admin Password">
+    <button onclick="checkAdmin()">Login</button>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="container" id="adminPanel" style="display:none;">
+    <h1>Quiz Records</h1>
+
+    <input class="search-box" id="search" placeholder="Search by name/email" onkeyup="searchRecord()">
+
+    <button class="sort-btn" onclick="sortScore()">Sort by Highest Score</button>
+    <button class="clear-btn" onclick="clearAll()">Clear All Records</button>
+
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Score</th>
+            <th>Date</th>
+            <th>Delete</th>
+        </tr>
+        <tbody id="recordTable"></tbody>
+    </table>
+</div>
 <script>
-// ---------------- QUESTION BANK ---------------- //
-
-const questionsData = {
-  math: [
-    { q: "7 × 8 = ?", options: ["54", "56", "48", "58"], answer: 1 },
-    { q: "12 + (6 ÷ 2) × 3 = ?", options: ["30", "27", "21", "15"], answer: 0 },
-    { q: "Square root of 144?", options: ["10", "11", "12", "14"], answer: 2 },
-    { q: "x + 3 = 7, x = ?", options: ["4", "5", "6", "3"], answer: 0 }
-  ],
-
-  science: [
-    { q: "Red planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answer: 1 },
-    { q: "Water boils at?", options: ["1 atm", "2 atm", "3 atm", "0.5 atm"], answer: 0 },
-    { q: "Symbol of Gold?", options: ["Ag", "Au", "Pt", "Gd"], answer: 1 },
-    { q: "Gas absorbed by plants?", options: ["O2", "CO2", "N2", "H2"], answer: 1 }
-  ],
-
-  gk: [
-    { q: "Capital of France?", options: ["Rome", "Paris", "Berlin", "Madrid"], answer: 1 },
-    { q: "Largest ocean?", options: ["Atlantic", "Pacific", "Indian", "Arctic"], answer: 1 },
-    { q: "1st man on moon?", options: ["1969", "1971", "1959", "1967"], answer: 0 },
-    { q: "Author of 'Romeo & Juliet'?", options: ["Dickens", "Twain", "Shakespeare", "Austen"], answer: 2 }
-  ]
-};
-
-// ---------------- VARIABLES ---------------- //
-
-let selectedTopic = "";
-let quizQuestions = [];
+let username, email;
 let index = 0;
 let score = 0;
-let timer;
-let timeLeft;
+let selected = false;
 
-// ---------------- START QUIZ ---------------- //
+const questions = [
+    { q: "1. Who developed Python?", a: ["James Gosling","Guido van Rossum","Dennis Ritchie","Bjarne Stroustrup"], correct: 1 },
+    { q: "2. Python file extension?", a: [".java",".py",".txt",".pyt"], correct: 1 },
+    { q: "3. Function keyword?", a: ["func","define","def","function"], correct: 2 },
+    { q: "4. Mutable datatype?", a: ["Tuple","List","String","Integer"], correct: 1 },
+    { q: "5. Exponent operator?", a: ["^","**","//","%%"], correct: 1 },
+    { q: "6. len() ?", a: ["Finds size","Adds numbers","Deletes item","None"], correct: 0 },
+    { q: "7. Loop until condition false?", a: ["elif","for","while","repeat"], correct: 2 },
+    { q: "8. Valid variable name?", a: ["2num","num_2","num-2","num 2"], correct: 1 },
+    { q: "9. Stop loop keyword?", a: ["quit","stop","break","exit"], correct: 2 },
+    { q: "10. type(10)?", a: ["str","float","class int","bool"], correct: 2 }
+];
 
 function startQuiz() {
-  selectedTopic = document.getElementById("topic").value;
-  timeLeft = parseInt(document.getElementById("duration").value);
+    username = document.getElementById("username").value;
+    email = document.getElementById("email").value;
 
-  quizQuestions = [...questionsData[selectedTopic]];
-  index = 0;
-  score = 0;
-
-  document.getElementById("result-box").innerHTML = "";
-  startTimer();
-  loadQuestion();
-}
-
-// ---------------- TIMER ---------------- //
-
-function startTimer() {
-  timer = setInterval(() => {
-    document.getElementById("timer").innerHTML = "⏳ Time: " + timeLeft + "s";
-
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      finishQuiz();
+    if (username === "" || email === "") {
+        alert("Enter Name & Email");
+        return;
     }
-    timeLeft--;
-  }, 1000);
+
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("quizBox").style.display = "block";
+
+    showQuestion();
+    startTimer();
 }
 
-// ---------------- LOAD QUESTION ---------------- //
+function showQuestion() {
+    selected = false;
+    let q = questions[index];
 
-function loadQuestion() {
-  if (index >= quizQuestions.length) {
-    finishQuiz();
-    return;
-  }
+    let html = `<h3>${q.q}</h3>`;
 
-  let qObj = quizQuestions[index];
+    q.a.forEach((opt, i) => {
+        html += `<div class='option' onclick='selectOption(${i})' id='opt${i}'>${opt}</div>`;
+    });
 
-  let quizHTML = `
-    <div class="question-box">
-      <h2>(${index + 1}) ${qObj.q}</h2>
-      ${qObj.options
-        .map(
-          (opt, i) =>
-            `<div class='option' onclick='selectAnswer(${i})'>${opt}</div>`
-        )
-        .join("")}
-    </div>
-  `;
-
-  document.getElementById("quiz-area").innerHTML = quizHTML;
-  document.getElementById("score").innerHTML = `Score: ${score}`;
+    document.getElementById("question-box").innerHTML = html;
 }
 
-// ---------------- ANSWER SELECTION ---------------- //
+function selectOption(i) {
+    if (selected) return;
 
-function selectAnswer(choice) {
-  let correct = quizQuestions[index].answer;
+    selected = true;
+    let correct = questions[index].correct;
 
-  if (choice === correct) score++;
-
-  index++;
-  loadQuestion();
+    if (i === correct) {
+        document.getElementById("opt" + i).classList.add("correct");
+        score++;
+    } else {
+        document.getElementById("opt" + i).classList.add("wrong");
+        document.getElementById("opt" + correct).classList.add("correct");
+    }
 }
 
-// ---------------- FINISH QUIZ ---------------- //
+function nextQuestion() {
+    if (!selected) {
+        alert("Select an answer!");
+        return;
+    }
+    index++;
+
+    if (index === questions.length) {
+        finishQuiz();
+    } else {
+        showQuestion();
+    }
+}
 
 function finishQuiz() {
-  clearInterval(timer);
+    document.getElementById("quizBox").style.display = "none";
+    document.getElementById("resultBox").style.display = "block";
 
-  document.getElementById("quiz-area").innerHTML = "";
-  document.getElementById("timer").innerHTML = "";
+    document.getElementById("user").innerHTML =
+        "User: " + username + " (" + email + ")";
 
-  document.getElementById("result-box").innerHTML = `
-    <h2>Quiz Finished!</h2>
-    <h3>Your Score: ${score} / ${quizQuestions.length}</h3>
-    <button onclick="startQuiz()">Restart Quiz</button>
-  `;
+    document.getElementById("score").innerHTML =
+        "Score: " + score + " / 10";
+
+    saveResult();
+}
+
+let time = 300;
+function startTimer() {
+    let timer = setInterval(() => {
+        let m = Math.floor(time / 60);
+        let s = time % 60;
+
+        document.getElementById("timer").innerHTML =
+            `Time Left: ${m}:${s < 10 ? "0" + s : s}`;
+
+        if (time <= 0) {
+            clearInterval(timer);
+            finishQuiz();
+        }
+
+        time--;
+    }, 1000);
+}
+
+/* SAVE USER RECORD */
+function saveResult() {
+    let records = JSON.parse(localStorage.getItem("quizRecords") || "[]");
+
+    records.push({
+        name: username,
+        email: email,
+        score: score,
+        date: new Date().toLocaleString()
+    });
+
+    localStorage.setItem("quizRecords", JSON.stringify(records));
+}
+
+/* ----------- ADMIN MODE ---------- */
+
+if (location.hash === "#admin") {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("adminLogin").style.display = "block";
+}
+
+function checkAdmin() {
+    let pass = document.getElementById("adminPass").value;
+
+    if (pass === "admin123") {
+        loadAdminPanel();
+    } else {
+        alert("Wrong Password");
+    }
+}
+
+function loadAdminPanel() {
+    document.getElementById("adminLogin").style.display = "none";
+    document.getElementById("adminPanel").style.display = "block";
+    showRecords();
+}
+
+/* SHOW RECORDS */
+function showRecords() {
+    let records = JSON.parse(localStorage.getItem("quizRecords") || "[]");
+    let table = "";
+
+    records.forEach((r, i) => {
+        table += `
+            <tr>
+                <td>${r.name}</td>
+                <td>${r.email}</td>
+                <td>${r.score}</td>
+                <td>${r.date}</td>
+                <td><span class="delete-btn" onclick="deleteRecord(${i})">Delete</span></td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("recordTable").innerHTML = table;
+}
+
+/* DELETE ONE RECORD */
+function deleteRecord(i) {
+    let records = JSON.parse(localStorage.getItem("quizRecords") || "[]");
+    records.splice(i, 1);
+    localStorage.setItem("quizRecords", JSON.stringify(records));
+    showRecords();
+}
+
+/* CLEAR ALL */
+function clearAll() {
+    if (confirm("Delete all records?")) {
+        localStorage.removeItem("quizRecords");
+        showRecords();
+    }
+}
+
+/* SEARCH */
+function searchRecord() {
+    let text = document.getElementById("search").value.toLowerCase();
+    let records = JSON.parse(localStorage.getItem("quizRecords") || "[]");
+
+    let filtered = records.filter(r =>
+        r.name.toLowerCase().includes(text) ||
+        r.email.toLowerCase().includes(text)
+    );
+
+    let table = "";
+    filtered.forEach((r, i) => {
+        table += `
+            <tr>
+                <td>${r.name}</td>
+                <td>${r.email}</td>
+                <td>${r.score}</td>
+                <td>${r.date}</td>
+                <td><span class="delete-btn" onclick="deleteRecord(${i})">Delete</span></td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("recordTable").innerHTML = table;
+}
+
+/* SORT */
+function sortScore() {
+    let records = JSON.parse(localStorage.getItem("quizRecords") || "[]");
+
+    records.sort((a, b) => b.score - a.score);
+
+    localStorage.setItem("quizRecords", JSON.stringify(records));
+    showRecords();
 }
 </script>
-
 </body>
 </html>
+
+   
+ 
+    
+  
+
+
+  
+     
+     
+ 
+
